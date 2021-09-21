@@ -1,0 +1,52 @@
+name: Build-Test-Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checking out repository
+        uses: actions/checkout@v2
+
+      - name: Configure Git for private modules
+        env:
+          USER: ${{ secrets.GH_USER }}
+          TOKEN: ${{ secrets.GH_TOKEN }}
+        run: git config --global url."https://${USER}:${TOKEN}@github.com".insteadOf "https://github.com"
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.x
+
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build application
+        run: |-
+          make build
+
+      - name: Run Unit tests
+        run: |-
+          cp ./params/berekbek.toml.sample ./params/berekbek.toml
+          make test
+
+      - name: Copy file via scp
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.BEREKBEK_HOST }}
+          username: ${{ secrets.BEREKBEK_USERNAME }}
+          port: ${{ secrets.BEREKBEK_PORT }}
+          key: ${{ secrets.BEREKBEK_SSH_KEY }}
+          source: "."
+          target: "~/berekbek"

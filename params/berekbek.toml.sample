@@ -1,0 +1,22 @@
+[app]
+host="0.0.0.0"
+port=8080
+name="berekbek"
+code=00
+
+[database]
+connection="dialect"
+host="host"
+port=1234
+name="name"
+username="username"
+password="password"
+
+[response_code]
+[response_code.EN]
+101001 = "Database connection error"
+101002 = "Cache connection error"
+
+[response_code.ID]
+101001 = "Error koneksi ke Database"
+101002 = "Error koneksi ke Cache server"
